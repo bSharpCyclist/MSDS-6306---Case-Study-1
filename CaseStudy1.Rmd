@@ -1,6 +1,6 @@
 ---
 title: "US Brewery and Beer Case Study"
-author: "Dan Crouthamel"
+author: "Dan Crouthamel, Pradeep"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: html_document
 ---
@@ -129,18 +129,15 @@ maxIBU.row <- maxIBU[which.max(maxIBU$max),]
 maxIBU.row
 ```
 
-Colorado has the highest ABV and Oregon has the highest IBU
+Colorado has the highest ABV and Oregon has the highest IBU.
 
 ### Summary statistics for the ABV variable.
 
 ```{r}
 summary(mergedData$ABV)
-
-# or do something like this to remvoe NAs
-summary(mergedData$ABV[!is.na(mergedData$ABV)])
 ```
 
-Need to include summary statistics. Just general stuff, question is vague.
+### Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
 
 ```{r fig.align='center', fig.width=11}
 ggplot(mergedData[!(is.na(mergedData$IBU)|is.na(mergedData$ABV)),], aes(x=IBU, y=ABV)) + 
@@ -148,8 +145,6 @@ ggplot(mergedData[!(is.na(mergedData$IBU)|is.na(mergedData$ABV)),], aes(x=IBU, y
   geom_smooth(method = "lm", se = TRUE)
 summary(lm(mergedData$ABV ~ mergedData$IBU))
 ```
-
-### Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
 
 Look at more statistics options and come up with a good conclusion
 
