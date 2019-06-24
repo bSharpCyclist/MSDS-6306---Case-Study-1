@@ -1,6 +1,6 @@
 ---
 title: "US Brewery and Beer Case Study"
-author: "Dan Crouthamel"
+author: "Dan Crouthamel, Pradeep Pradeepkumar"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: html_document
 ---
@@ -26,7 +26,8 @@ Our client, Beer City, in Pennsylvania, is looking to expand their offering of d
 *  Median Alcohol Content per State (ABV)
 *  International Bitterness Unit per State (IBU)
 *  States with the highest ABV and IBU
-*  Statistical analysis on ABV and the relationship between ABV and IBU
+*  Statistical summary on ABV and the relationship between ABV and IBU
+*  Fun examination of highest ABV with low IBU
 
 ### Breweries per State
 
@@ -39,7 +40,6 @@ brewData <- read.csv("Breweries.csv", header = TRUE)
 brewTable <- brewData %>% count(State)
 names(brewTable) <- c("State","Count")
 # brewTable
-
 
 brewPlot <-ggplot(data=brewTable, aes(x=reorder(State, -Count), y=Count, fill=State))
 brewPlot +
@@ -85,7 +85,7 @@ A sample of the beginning and ending of the data set appears above and includes 
 ### Report the number of NA's in each column
 
 ```{r}
-colSums(is.na(mergedData))
+kable(colSums(is.na(mergedData)))
 ```
 
 The above graphic shows us that we have 62 NAs in the ABV column, and 1005 NAs in the IBU column.
@@ -118,7 +118,7 @@ ibuPlot +
   theme(plot.title = element_text(hjust = 0.5), legend.position = "top")
 ```
 
-Take notice that South Dakota didn't have an IBU value ...
+There is no IBU data for South Dakota.
 
 ### Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
 
@@ -140,14 +140,12 @@ Colorado has the highest ABV and Oregon has the highest IBU
 
 ```{r}
 summary(mergedData$ABV)
-
-# or do something like this to remvoe NAs
-summary(mergedData$ABV[!is.na(mergedData$ABV)])
+#summary(mergedData$ABV[!is.na(mergedData$ABV)])
 ```
 
-Need to include summary statistics. Just general stuff, question is vague.
+There are 62 cases with no ABV data, which could be non-alcoholic beer. Maybe. The lowest is .001, which is considered non alcoholic and the highest is 12.8%, which is quite high for a beer. 50% of the data lies between 5 and 6.7 % ABV, which seems typical of beer.
 
-
+### Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
 
 ```{r fig.align='center', fig.width=11}
 mergedData1 <- na.omit(mergedData) 
@@ -157,9 +155,7 @@ ggplot(mergedData1[!(is.na(mergedData1$IBU)|is.na(mergedData1$ABV)),], aes(x=IBU
 summary(lm(mergedData1$ABV ~ mergedData1$IBU))
 ```
 
-### Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
-
-Look at more statistics options and come up with a good conclusion
+Above we can see somewhat a linear trend between ABV and IBU. Something the should be considered though is the concept of relative bitterness vs perceived bitterness. For example, a beer that has 60 IBUs and is 6% ABV will taste about as bitter as a 90 IBU beer with 9% ABV. A higher ABV may indicate more malts, which is sweeter and will balance the precevied bitterness. So although there appears to be a weak linear trend, the average perceived bitterness could be flat (constant).
 
 ### Find a beer with maximum ABV and IBU less than 50
 
@@ -170,5 +166,4 @@ max_abv <- head(ibu_less_50[order(ibu_less_50$ABV, decreasing = TRUE),],1)
 name <- max_abv$`Beer Name`
 ```
 
-
-### Beer named  `r name`  has highest alcohol content at `r max_abv$ABV` and IBV value at `r max_abv$IBU`
+Beer named  `r name`  has highest alcohol content at `r max_abv$ABV` and IBV value at `r max_abv$IBU`
