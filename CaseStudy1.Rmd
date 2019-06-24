@@ -1,6 +1,6 @@
 ---
 title: "US Brewery and Beer Case Study"
-author: "Dan Crouthamel, Pradeep"
+author: "Dan Crouthamel"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: html_document
 ---
@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(magrittr)
 library(stats)
+library('knitr')
 pagebreak <- function() {
   if(knitr::is_latex_output())
     return("\\newpage")
@@ -39,7 +40,8 @@ brewTable <- brewData %>% count(State)
 names(brewTable) <- c("State","Count")
 # brewTable
 
-brewPlot <-ggplot(data=brewTable, aes(x=State, y=Count, fill=State))
+
+brewPlot <-ggplot(data=brewTable, aes(x=reorder(State, -Count), y=Count, fill=State))
 brewPlot +
   geom_bar(stat="identity") +
   ylab("Brewery Count") +
@@ -63,8 +65,8 @@ beerData %<>% rename("Brew_ID" = "Brewery_id")
 
 # Using inner_join of dplyr, could have used merged too, but I like this better
 mergedData <- inner_join(brewData, beerData, by = c("Brew_ID" = "Brew_ID"))
-head(mergedData)
-tail(mergedData)
+kable(head(mergedData))
+kable(tail(mergedData))
 ```
 
 A sample of the beginning and ending of the data set appears above and includes the following observations.
@@ -96,21 +98,24 @@ The above graphic shows us that we have 62 NAs in the ABV column, and 1005 NAs i
 medianABV <- mergedData %>% group_by(State) %>% summarise(median = median(ABV, na.rm = TRUE))
 medianIBU <- mergedData %>% group_by(State) %>% summarise(median = median(IBU, na.rm = TRUE))
 
-abvPlot <-ggplot(data=medianABV, aes(x=State, y=median))
+medianABV <- mergedData %>% group_by(State) %>% summarise(median = mean(ABV, na.rm = TRUE))
+medianIBU <- mergedData %>% group_by(State) %>% summarise(median = mean(IBU, na.rm = TRUE))
+
+abvPlot <-ggplot(data=medianABV, aes(x=reorder(State,-median), y=median, fill=State))
 abvPlot +
   geom_bar(stat="identity") +
   ylab("Median ABV") +
   xlab("State") +
   ggtitle("Median ABV (Alcohol By Volume) per State") +
-  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "top")
 
-ibuPlot <-ggplot(data=medianIBU, aes(x=State, y=median))
+ibuPlot <-ggplot(data=medianIBU, aes(x=reorder(State, -median), y=median, fill=State))
 ibuPlot +
   geom_bar(stat="identity") +
   ylab("Median IBU") +
   xlab("State") +
   ggtitle("Median IBU (International Bitterness Units) per State") +
-  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "top")
 ```
 
 Take notice that South Dakota didn't have an IBU value ...
@@ -129,27 +134,41 @@ maxIBU.row <- maxIBU[which.max(maxIBU$max),]
 maxIBU.row
 ```
 
-Colorado has the highest ABV and Oregon has the highest IBU.
+Colorado has the highest ABV and Oregon has the highest IBU
 
 ### Summary statistics for the ABV variable.
 
 ```{r}
 summary(mergedData$ABV)
+
+# or do something like this to remvoe NAs
+summary(mergedData$ABV[!is.na(mergedData$ABV)])
+```
+
+Need to include summary statistics. Just general stuff, question is vague.
+
+
+
+```{r fig.align='center', fig.width=11}
+mergedData1 <- na.omit(mergedData) 
+ggplot(mergedData1[!(is.na(mergedData1$IBU)|is.na(mergedData1$ABV)),], aes(x=IBU, y=ABV)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = TRUE)
+summary(lm(mergedData1$ABV ~ mergedData1$IBU))
 ```
 
 ### Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
 
-```{r fig.align='center', fig.width=11}
-ggplot(mergedData[!(is.na(mergedData$IBU)|is.na(mergedData$ABV)),], aes(x=IBU, y=ABV)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se = TRUE)
-summary(lm(mergedData$ABV ~ mergedData$IBU))
-```
-
 Look at more statistics options and come up with a good conclusion
 
+### Find a beer with maximum ABV and IBU less than 50
+
+``` {r echo=TRUE}
+ibu_nona <- mergedData[!is.na(mergedData$IBU),]
+ibu_less_50 <- ibu_nona[ibu_nona$IBU < 50,]
+max_abv <- head(ibu_less_50[order(ibu_less_50$ABV, decreasing = TRUE),],1)
+name <- max_abv$`Beer Name`
+```
 
 
-
-
-
+### Beer named  `r name`  has highest alcohol content at `r max_abv$ABV` and IBV value at `r max_abv$IBU`
